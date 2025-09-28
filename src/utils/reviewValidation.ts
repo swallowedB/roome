@@ -29,13 +29,23 @@ export const isValidReview = (reviewData: BookReviewData): boolean => {
  * @returns API 형식의 서평 데이터
  */
 export const transformReviewDataForAPI = (reviewData: BookReviewData) => {
-  return {
-    title: reviewData.title,
-    quote: reviewData.quote,
-    takeaway: reviewData.emotion,
-    motivate: reviewData.reason,
-    topic: reviewData.discussion,
-    freeFormText: reviewData.freeform,
+  const title = reviewData.title.trim();
+  const quote = reviewData.quote.trim();
+  const takeaway = reviewData.emotion.trim();
+  const motivate = reviewData.reason.trim();
+  const topic = reviewData.discussion.trim();
+  const freeFormText = reviewData.freeform.trim();
+
+  const payload: Record<string, string> = {
+    title,
     coverColor: reviewData.theme,
   };
+
+  if (quote) payload.quote = quote;
+  if (takeaway) payload.takeaway = takeaway;
+  if (motivate) payload.motivate = motivate;
+  if (topic) payload.topic = topic;
+  if (freeFormText) payload.freeFormText = freeFormText;
+
+  return payload as unknown as ReviewType;
 };
