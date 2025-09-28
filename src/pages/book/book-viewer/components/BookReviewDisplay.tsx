@@ -7,6 +7,7 @@ import { BOOK_THEME, BookThemeType } from '@/constants/bookTheme';
 
 // api
 import { bookAPI } from '@apis/book';
+import { profileAPI } from '@apis/profile';
 
 // store
 import { useToastStore } from '@/store/useToastStore';
@@ -57,6 +58,7 @@ const BookReviewDisplay = ({
   const showToast = useToastStore((state) => state.showToast);
   const { user } = useUserStore();
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [targetUserNickname, setTargetUserNickname] = useState<string>('');
 
   // view 모드일 때 사용할 데이터 fetch 로직
   // const [reviewData, setReviewData] = useState<BookReviewData | null>(null);
@@ -66,6 +68,30 @@ const BookReviewDisplay = ({
       // API 호출 로직 추가하기
     }
   }, [mode, userId, bookId]);
+
+  // URL에서 userId 추출하고 해당 사용자의 nickname 가져오기
+  useEffect(() => {
+    const fetchTargetUserProfile = async () => {
+      try {
+        const pathParts = window.location.pathname.split('/');
+        const userIndex = pathParts.indexOf('user');
+        const targetUserId =
+          userIndex !== -1 && pathParts[userIndex + 1]
+            ? pathParts[userIndex + 1]
+            : null;
+
+        if (targetUserId) {
+          const userProfile = await profileAPI.getUserProfile(targetUserId);
+          setTargetUserNickname(userProfile.nickname);
+        }
+      } catch (error) {
+        console.error('사용자 프로필 조회 실패:', error);
+        setTargetUserNickname(user.nickname);
+      }
+    };
+
+    fetchTargetUserProfile();
+  }, [user.nickname]);
 
   // 실제 표시할 데이터 (preview 모드면 previewData 사용)
   const displayData = previewData; // mode와 상관없이 previewData 사용
@@ -149,7 +175,7 @@ const BookReviewDisplay = ({
           onEdit={handleEdit}
           onDelete={() => setIsDeleteModalOpen(true)}
           isMyReview={isMyReview}
-          nickname={user.nickname}
+          nickname={targetUserNickname || user.nickname}
         />
       </article>
 
