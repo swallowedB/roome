@@ -100,7 +100,7 @@ const HiddenMenu = ({
             <li>
               <Link
                 to='https://forms.gle/4cv4HNTDb9JYjjjUA'
-                className='w-full px-4 py-3 text-center border-b border-gray-100 text-[#2E4D99]/50 hover:text-[#2E4D99] transition-colors'>
+                className='w-full px-4 py-3 text-center border-b border-gray-100 text-[#2E4D99]/50 hover:text-[#2E4D99] transition-colors flex items-center justify-center gap-2'>
                 피드백
               </Link>
             </li>
