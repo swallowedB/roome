@@ -30,9 +30,10 @@ export default function CdPlayer({
   // 현재 시간 툴팁(호버할때마다 리렌더링되는것을 막기위해 직접 DOM조작)
 
   const videoId = useMemo(() => {
-    const match = cdInfo?.youtubeUrl.match(/[?&]v=([^&]+)/);
+    if (!cdInfo?.youtubeUrl) return '';
+    const match = cdInfo.youtubeUrl.match(/[?&]v=([^&]+)/);
     return match ? match[1] : '';
-  }, [cdInfo.youtubeUrl]);
+  }, [cdInfo?.youtubeUrl]);
 
   const opts = {
     height: '0',
@@ -155,7 +156,8 @@ export default function CdPlayer({
             setIsCdListOpen={setIsCdListOpen}
           />
         </section>
-        <div className='
+        <div
+          className='
           absolute inset-0
           bg-gradient-to-tr from-white/30 via-transparent to-white/10
           opacity-50

@@ -1,4 +1,3 @@
-import React from 'react';
 import Footer from './components/footer/Footer';
 import HeroSection from './components/hero/HeroSection';
 import CtaSection from './components/cta/CtaSection';
@@ -6,7 +5,9 @@ import OverviewSection from './components/overview/OverviewSection';
 
 const OnboardingPage = () => {
   return (
-    <div className='jalnan w-full h-screen overflow-y-auto'>
+    <div
+      id='onboarding-scroll'
+      className='jalnan w-full h-screen overflow-y-auto overflow-x-hidden'>
       <HeroSection />
       <OverviewSection />
       <CtaSection />

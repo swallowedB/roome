@@ -55,6 +55,8 @@
   z-index: 1;
 }
 
+/* (원복) 가로 스크롤은 페이지 컨테이너에서 제어 */
+
 @media (min-width: 1200px) {
   .swiper-button-next,
   .swiper-button-prev {

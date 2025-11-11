@@ -7,6 +7,14 @@
 
   <p align="center"> 👉🏻[✨RoomE 배포](https://www.roome.io.kr)👈🏻 </p>
 
+## 🎥 시연 연상
+<div width="30%">
+  
+[![RoomE Main](https://github.com/user-attachments/assets/9a2fa9c6-2d4c-4c72-9f9c-91e3b4f9cbe7
+)](https://www.youtube.com/watch?v=cfqYWgZEVag)
+</div>
+
+
 <br/>
 
 # ☁️ 나를 찾는 디지털 힐링 공간 RoomE

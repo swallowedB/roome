@@ -55,9 +55,6 @@ export default function CdPage() {
 
   if (cdLoading || rackLoading) return <Loading />;
 
-  // 디버깅용 로그
-  console.log('CdPage render:', { cdLoading, rackLoading, cdError, cdInfo });
-
   // 에러 발생 시 풀백 화면
   if (cdError) {
     return (

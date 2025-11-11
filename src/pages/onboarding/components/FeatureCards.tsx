@@ -58,14 +58,14 @@ const FeatureCards = ({
     <div className={baseClassName}>
       <h3
         className={twMerge(
-          'text-xl sm:text-2xl md:text-3xl font-medium relative',
+          'text-xl sm:text-2xl md:text-3xl font-medium relative text-[#0d1f61]',
           titleClassName,
         )}>
         {title}
       </h3>
       <p
         className={twMerge(
-          'text-base sm:text-lg text-center',
+          'text-base sm:text-lg text-center text-[#0d1f61]',
           descriptionClassName,
         )}>
         {description}

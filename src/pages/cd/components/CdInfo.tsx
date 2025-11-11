@@ -4,7 +4,9 @@ import React, { useEffect } from 'react';
 
 export const CdInfo = React.memo(
   ({ cdInfo, cdPlaying }: { cdInfo: CDInfo; cdPlaying: boolean }) => {
-    const textLength = cdInfo?.title.length;
+    if (!cdInfo) return null;
+
+    const textLength = cdInfo.title?.length || 0;
     // // console.log('cdInfo'); props의 상태가 변할때만 리렌더링
 
     useEffect(() => {
@@ -47,7 +49,7 @@ export const CdInfo = React.memo(
               className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[6] w-[70%] ${
                 cdPlaying && 'animate-spin'
               }`}
-              src={cdInfo.coverUrl}
+              src={cdInfo.coverUrl || '/images/default-cd-cover.png'}
               alt='앨범 커버'
               style={{
                 WebkitMaskImage: `url(${cd})`,

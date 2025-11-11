@@ -11,29 +11,19 @@ import CdDockMenu from './components/CdDockMenu';
 import CdHoverLabel from './components/CdHoverLabel';
 import CdRack from './components/CdRack';
 import useCdRackData from './hooks/useCdRackData';
-import { mapToRawCd } from '../../utils/cdMapper';
-
 
 export default function CdRackPage() {
   const { userId: myUserId } = useUserStore().user;
   const { userId } = useParams();
   const targetUserId = Number(userId);
-  const {
-    items,
-    initialLoading,
-    isFetchingMore,
-    hasMore,
-    loadMore,
-    addCd,
-    deleteCd,
-  } = useCdRackData(targetUserId, 14);
+  const { items, initialLoading, isFetchingMore, hasMore, loadMore, deleteCd } =
+    useCdRackData(targetUserId, 14);
   const [activeSettings, setActiveSettings] = useState<'add' | 'delete' | null>(
     null,
   );
   const [resetDockMenuState, setResetDockMenuState] = useState(false);
   const phase = useCdStore((set) => set.phase);
   const isModalOpen = activeSettings === 'add' || activeSettings === 'delete';
-  
 
   useEffect(() => {
     if (phase > items.length - 3 && hasMore && !isFetchingMore) {
@@ -98,7 +88,7 @@ export default function CdRackPage() {
             title='CD 랙에 담을 음악 찾기'
             onClose={handleCloseSettings}
             type='CD'
-            onSelect={(cdItem) => addCd(mapToRawCd(cdItem))}
+            onSelect={() => {}}
           />
         )}
         {activeSettings === 'delete' && (
