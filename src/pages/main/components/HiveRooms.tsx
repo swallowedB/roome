@@ -1,5 +1,5 @@
 import { OrbitControls } from '@react-three/drei';
-import { Canvas } from '@react-three/fiber';
+import { Canvas, ThreeEvent } from '@react-three/fiber';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
@@ -13,7 +13,7 @@ export default function HiveRooms({
   myUserId,
   onLoadingComplete,
 }: HiveRoomsProps) {
-  const { rooms } = useRooms(30, myUserId);
+  const { rooms } = useRooms(myUserId);
   const positionedRooms = useHexagonGrid(rooms, 0, 0);
   const [isLoading, setIsLoading] = useState(true);
   const [loadedRooms, setLoadedRooms] = useState(new Set());
@@ -24,11 +24,11 @@ export default function HiveRooms({
   const startPos = useRef<{ x: number; y: number } | null>(null);
   const tapThreshold = 8;
 
-  const handlePointerDown = (e: React.PointerEvent) => {
+  const handlePointerDown = (e: ThreeEvent<PointerEvent>) => {
     startPos.current = { x: e.clientX, y: e.clientY };
   };
 
-  const handlePointerUp = (e: React.PointerEvent, roomIndex: number) => {
+  const handlePointerUp = (e: ThreeEvent<PointerEvent>, roomIndex: number) => {
     if (!startPos.current) return;
     const dx = e.clientX - startPos.current.x;
     const dy = e.clientY - startPos.current.y;
