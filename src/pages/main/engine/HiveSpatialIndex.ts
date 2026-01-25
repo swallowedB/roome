@@ -4,14 +4,14 @@ export class HiveSpatialIndex {
     x: number;
     z: number;
     modelPath: string;
-  }[] = [];
+  }[];
 
-  constructor(positionedRooms: PositionedRoom[]) {
-    this.items = positionedRooms.map(({ index, position, room }) => ({
+  constructor(positionedRooms: { room: Room; position: [number, number, number] }[]) {
+    this.items = positionedRooms.map(({ room, position }, index) => ({
       index,
       x: position[0],
       z: position[2],
-      modelPath: room.modelPath,
+      modelPath: room.modelPath ?? '',
     }));
   }
 

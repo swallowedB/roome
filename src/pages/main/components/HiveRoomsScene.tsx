@@ -2,8 +2,8 @@ import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
 
-import { HiveSpatialIndex } from '@pages/main/engine/HiveSpatialIndex';
 import HiveRoomModel from './HiveRoomModel';
+import { HiveSpatialIndex } from '@pages/main/engine/HiveSpatialIndex';
 
 interface HiveRoomsSceneProps {
   positionedRooms: PositionedRoom[];
@@ -91,6 +91,7 @@ export default function HiveRoomsScene({
             onPointerOut={onPointerOut}>
             <HiveRoomModel
               room={room}
+              position={position}
               onModelLoaded={onModelLoaded}
             />
           </group>
