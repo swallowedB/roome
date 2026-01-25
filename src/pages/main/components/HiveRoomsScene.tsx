@@ -41,15 +41,13 @@ export default function HiveRoomsScene({
     if (!index) return;
 
     const camX = camera.position.x;
-    const camZ = camera.position.z;
 
-    const visible = index.getVisible(camX, camZ, VISIBLE_RADIUS);
-    const prefetch = index.getPrefetchTargets(
-      camX,
-      camZ,
-      PREFETCH_RADIUS_INNER,
-      PREFETCH_RADIUS_OUTER,
-    );
+  const visible = index.getVisibleByX(camX, VISIBLE_RADIUS);
+  const prefetch = index.getPrefetchTargetsByX(
+    camX,
+    PREFETCH_RADIUS_INNER,
+    PREFETCH_RADIUS_OUTER,
+  );
 
     const nextVisible = new Set(visible.map((v) => v.index));
     setVisibleIndices((prev) => {
