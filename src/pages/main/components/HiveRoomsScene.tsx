@@ -1,9 +1,10 @@
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
 
-import HiveRoomModel from './HiveRoomModel';
 import { HiveSpatialIndex } from '@pages/main/engine/HiveSpatialIndex';
+import HiveRoomModel from './HiveRoomModel';
 
 interface HiveRoomsSceneProps {
   positionedRooms: PositionedRoom[];
@@ -40,14 +41,29 @@ export default function HiveRoomsScene({
     const index = indexRef.current;
     if (!index) return;
 
-    const camX = camera.position.x;
+    const { minX, maxX } = index.getHorizontalBounds();
+    const halfWidth = VISIBLE_RADIUS;
 
-  const visible = index.getVisibleByX(camX, VISIBLE_RADIUS);
-  const prefetch = index.getPrefetchTargetsByX(
-    camX,
-    PREFETCH_RADIUS_INNER,
-    PREFETCH_RADIUS_OUTER,
-  );
+    let camX = camera.position.x;
+
+    const minCamX = minX + halfWidth;
+    const maxCamX = maxX - halfWidth;
+
+    if (minCamX < maxCamX) {
+      camX = THREE.MathUtils.clamp(camX, minCamX, maxCamX);
+      camera.position.x = camX;
+    } else {
+      camX = (minX + maxX) / 2;
+      camera.position.x = camX;
+    }
+
+    const visible = index.getVisibleByX(camX, halfWidth);
+    
+    const prefetch = index.getPrefetchTargetsByX(
+      camX,
+      PREFETCH_RADIUS_INNER,
+      PREFETCH_RADIUS_OUTER,
+    );
 
     const nextVisible = new Set(visible.map((v) => v.index));
     setVisibleIndices((prev) => {
