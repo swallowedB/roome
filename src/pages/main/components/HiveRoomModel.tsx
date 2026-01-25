@@ -1,4 +1,4 @@
-import { RoomModelCache } from '@pages/main/engine/RoomModelCache';
+import { RoomModelCache } from '@pages/main/engine/RoomModalCache';
 import { Center, useGLTF } from '@react-three/drei';
 import { useEffect, useMemo } from 'react';
 
