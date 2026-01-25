@@ -15,7 +15,7 @@ interface HiveRoomsSceneProps {
   onModelLoaded: (roomId: string) => void;
 }
 
-const VISIBLE_RADIUS = 18; // 렌더링 반경
+const VISIBLE_HALF_WIDTH = 18; // 렌더링 반경
 const PREFETCH_RADIUS_INNER = 18; // 프리패치 시작
 const PREFETCH_RADIUS_OUTER = 24; // 프리패치 끝
 
@@ -37,19 +37,29 @@ export default function HiveRoomsScene({
     indexRef.current = new HiveSpatialIndex(positionedRooms);
   }, [positionedRooms]);
 
+  useEffect(() => {
+    const index = indexRef.current;
+    if (!index) return;
+
+    const { minX, maxX } = index.getHorizontalBounds();
+    const centerX = (minX + maxX) / 2;
+
+    camera.position.x = centerX;
+  }, [positionedRooms, camera]);
+
   useFrame(() => {
     const index = indexRef.current;
     if (!index) return;
 
     const { minX, maxX } = index.getHorizontalBounds();
-    const halfWidth = VISIBLE_RADIUS;
-
+    const halfWidth = VISIBLE_HALF_WIDTH;
     let camX = camera.position.x;
 
-    const minCamX = minX + halfWidth;
-    const maxCamX = maxX - halfWidth;
+    const contentWidth = maxX - minX;
 
-    if (minCamX < maxCamX) {
+    if (contentWidth > halfWidth * 2) {
+      const minCamX = minX + halfWidth;
+      const maxCamX = maxX - halfWidth;
       camX = THREE.MathUtils.clamp(camX, minCamX, maxCamX);
       camera.position.x = camX;
     } else {
@@ -58,7 +68,6 @@ export default function HiveRoomsScene({
     }
 
     const visible = index.getVisibleByX(camX, halfWidth);
-    
     const prefetch = index.getPrefetchTargetsByX(
       camX,
       PREFETCH_RADIUS_INNER,
@@ -92,9 +101,10 @@ export default function HiveRoomsScene({
   return (
     <>
       {positionedRooms
-        .filter(
-          ({ index }) => visibleIndices.size === 0 || visibleIndices.has(index),
-        )
+        .filter(({ index }) => {
+          if (visibleIndices.size === 0) return true;
+          return visibleIndices.has(index);
+        })
         .map(({ room, position, index }) => (
           <group
             key={room.roomId}
