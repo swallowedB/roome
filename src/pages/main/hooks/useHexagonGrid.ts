@@ -38,7 +38,11 @@ function expandRing(
     const baseIndex = previousRing[(directionIndex + i) % previousRing.length];
     const basePos = result[baseIndex].position;
     const [dx, dy, dz] = dir;
-    const newPos: Position = [basePos[0] + dx, basePos[1] + dy, basePos[2] + dz];
+    const newPos: Position = [
+      basePos[0] + dx,
+      basePos[1] + dy,
+      basePos[2] + dz,
+    ];
     const posKey = `${newPos[0]},${newPos[1]},${newPos[2]}`;
 
     if (!visited.has(posKey) && newPos[0] + newPos[1] + newPos[2] === 0) {
@@ -50,11 +54,19 @@ function expandRing(
   return { roomIndex, placedInRing };
 }
 
-export default function useHexagonGrid(rooms, centerX = 0, centerY = 0) {
+export default function useHexagonGrid(
+  rooms: Room[],
+  centerX = 0,
+  centerY = 0,
+) {
   const positions = useMemo(() => {
     const roomCount = rooms.length;
     if (!roomCount)
-      return rooms.map((room) => ({ room, position: [centerX, centerY, 0] }));
+      return rooms.map((room, index) => ({
+        room,
+        position: [centerX, centerY, 0] as [number, number, number],
+        index,
+      }));
 
     const result: RoomPosition[] = [];
     const visited = new Set<string>();
@@ -126,11 +138,11 @@ export default function useHexagonGrid(rooms, centerX = 0, centerY = 0) {
     const width = roomWidth;
     const height = roomHeight * 1.33;
 
-    const finalRooms = result.map(({ position: [q, r], room }) => {
+    const finalRooms = result.map(({ position: [q, r], room }, idx) => {
       const x = centerX + width * (q + r / 2);
       const y = centerY - height * (2.98 / 4.2) * r;
       const z = r * 0.7;
-      return { room, position: [x, y, z] };
+      return { room, position: [x, y, z] as [number, number, number], index: idx };
     });
 
     return finalRooms;

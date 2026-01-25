@@ -50,11 +50,16 @@ interface Room {
 }
 interface HiveRoomModelProps {
   room: Room;
-  position: [number, number, number];
   onModelLoaded: (roomId: string) => void;
 }
 
 interface HiveRoomsProps {
   myUserId: number;
   onLoadingComplete?: () => void;
+}
+
+interface PositionedRoom {
+  room: Room;
+  position: [number, number, number];
+  index: number; 
 }
