@@ -6,7 +6,9 @@ export class HiveSpatialIndex {
     modelPath: string;
   }[];
 
-  constructor(positionedRooms: { room: Room; position: [number, number, number] }[]) {
+  constructor(
+    positionedRooms: { room: Room; position: [number, number, number] }[],
+  ) {
     this.items = positionedRooms.map(({ room, position }, index) => ({
       index,
       x: position[0],
@@ -15,20 +17,23 @@ export class HiveSpatialIndex {
     }));
   }
 
-  getVisible(cameraX: number, cameraZ: number, radius: number) {
+  getVisibleByX(cameraX: number, halfWidth: number) {
     return this.items.filter((item) => {
       const dx = item.x - cameraX;
-      const dz = item.z - cameraZ;
-      return Math.hypot(dx, dz) <= radius;
+      const distX = Math.abs(dx);
+      return distX <= halfWidth;
     });
   }
 
-  getPrefetchTargets(cameraX: number, cameraZ: number, inner: number, outer: number) {
+  getPrefetchTargetsByX(
+    cameraX: number,
+    innerHalfWidth: number,
+    outerHalfWidth: number,
+  ) {
     return this.items.filter((item) => {
       const dx = item.x - cameraX;
-      const dz = item.z - cameraZ;
-      const dist = Math.hypot(dx, dz);
-      return dist > inner && dist <= outer;
+      const distX = Math.abs(dx);
+      return distX > innerHalfWidth && distX <= outerHalfWidth;
     });
   }
 }
