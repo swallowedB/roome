@@ -15,8 +15,8 @@ interface HiveRoomsSceneProps {
   onModelLoaded: (roomId: string) => void;
 }
 
-const ROOM_RADIUS = 2.5;
-const PREFETCH_MARGIN = 6;
+const SCREEN_INNER_MARGIN = 1.0;
+const SCREEN_OUTER_MARGIN = 1.2;
 
 export default function HiveRoomsScene({
   positionedRooms,
@@ -31,6 +31,7 @@ export default function HiveRoomsScene({
   const indexRef = useRef<HiveSpatialIndex | null>(null);
   const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set());
   const [prefetchPaths, setPrefetchPaths] = useState<string[]>([]);
+
   const initializedRef = useRef(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -45,51 +46,56 @@ export default function HiveRoomsScene({
     if (!positionedRooms.length) return;
 
     const items = index.getAll();
-
-    camera.updateMatrix();
-    camera.updateMatrixWorld();
-
-    const projScreenMatrix = new THREE.Matrix4();
-    projScreenMatrix.multiplyMatrices(
-      camera.projectionMatrix,
-      camera.matrixWorldInverse,
-    );
-    const frustum = new THREE.Frustum();
-    frustum.setFromProjectionMatrix(projScreenMatrix);
-
     const nextVisible = new Set<number>();
-    const marginIndices = new Set<number>();
     const nextPrefetch = new Set<string>();
 
-    items.forEach(({ index: idx, modelPath }) => {
+    let nearest: { idx: number; dist2: number } | null = null;
+
+    for (const item of items) {
+      const { index: idx, modelPath } = item;
       const positioned = positionedRooms[idx];
-      if (!positioned) return;
+      if (!positioned) continue;
 
       const { room, position } = positioned;
-      const center = new THREE.Vector3(position[0], position[1], position[2]);
+      const [x, y, z] = position;
 
-      const baseSphere = new THREE.Sphere(center, ROOM_RADIUS);
-      const marginSphere = new THREE.Sphere(
-        center,
-        ROOM_RADIUS + PREFETCH_MARGIN,
-      );
+      // 월드 좌표 → NDC(-1~1) 변환
+      const vec = new THREE.Vector3(x, y, z);
+      vec.project(camera); 
 
-      const inBase = frustum.intersectsSphere(baseSphere);
-      const inMargin = frustum.intersectsSphere(marginSphere);
+      const ndcX = vec.x;
+      const ndcY = vec.y;
+      const ndcZ = vec.z;
 
-      if (inBase) {
+      const dist2 = ndcX * ndcX + ndcY * ndcY;
+      if (!nearest || dist2 < nearest.dist2) {
+        nearest = { idx, dist2 };
+      }
+
+      const inView =
+        ndcZ >= -1 &&
+        ndcZ <= 1 &&
+        Math.abs(ndcX) <= SCREEN_INNER_MARGIN &&
+        Math.abs(ndcY) <= SCREEN_INNER_MARGIN;
+
+      const inPrefetch =
+        ndcZ >= -1.2 &&
+        ndcZ <= 1.2 &&
+        Math.abs(ndcX) <= SCREEN_OUTER_MARGIN &&
+        Math.abs(ndcY) <= SCREEN_OUTER_MARGIN;
+
+      if (inView) {
         nextVisible.add(idx);
-      } else if (inMargin) {
-        marginIndices.add(idx);
+      } else if (inPrefetch) {
         const path = room.modelPath ?? modelPath;
         if (path) {
           nextPrefetch.add(path);
         }
       }
-    });
+    }
 
-    if (nextVisible.size === 0 && marginIndices.size > 0) {
-      marginIndices.forEach((idx) => nextVisible.add(idx));
+    if (nextVisible.size === 0 && nearest) {
+      nextVisible.add(nearest.idx);
     }
 
     if (!initializedRef.current && nextVisible.size > 0) {
