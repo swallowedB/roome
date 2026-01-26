@@ -74,9 +74,7 @@ export default function HiveRoomsScene({
       const x = position[0];
       const z = position[2];
 
-      const inView =
-        x >= minX && x <= maxX &&
-        z >= minZ && z <= maxZ;
+      const inView = x >= minX && x <= maxX && z >= minZ && z <= maxZ;
 
       const inMargin =
         x >= minX - PREFETCH_MARGIN_WORLD &&
@@ -93,6 +91,10 @@ export default function HiveRoomsScene({
     });
 
     setVisibleIndices((prev) => {
+      if (nextVisible.size === 0) {
+        return prev;
+      }
+
       if (prev.size === nextVisible.size) {
         let same = true;
         prev.forEach((v) => {
@@ -118,7 +120,10 @@ export default function HiveRoomsScene({
   return (
     <>
       {positionedRooms
-        .filter(({ index }) => visibleIndices.has(index))
+        .filter(({ index }) => {
+          if (visibleIndices.size === 0) return true;
+          return visibleIndices.has(index);
+        })
         .map(({ room, position, index }) => (
           <group
             key={room.roomId}
