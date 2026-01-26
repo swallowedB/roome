@@ -16,9 +16,7 @@ interface HiveRoomsSceneProps {
 }
 
 const ROOM_RADIUS = 2.5;
-const PREFETCH_MARGIN = 5;
-
-const BROAD_RADIUS = 40;
+const PREFETCH_MARGIN = 6;
 
 export default function HiveRoomsScene({
   positionedRooms,
@@ -44,10 +42,7 @@ export default function HiveRoomsScene({
     if (!index) return;
     if (!positionedRooms.length) return;
 
-    const camX = camera.position.x;
-    const camZ = camera.position.z;
-
-    const candidates = index.getCandidatesInRadius(camX, camZ, BROAD_RADIUS);
+    const items = index.getAll();
 
     camera.updateMatrix();
     camera.updateMatrixWorld();
@@ -63,8 +58,11 @@ export default function HiveRoomsScene({
     const nextVisible = new Set<number>();
     const nextPrefetch = new Set<string>();
 
-    candidates.forEach(({ index: idx, modelPath }) => {
-      const { room, position } = positionedRooms[idx];
+    items.forEach(({ index: idx, modelPath }) => {
+      const positioned = positionedRooms[idx];
+      if (!positioned) return;
+
+      const { room, position } = positioned;
       const center = new THREE.Vector3(position[0], position[1], position[2]);
 
       const baseSphere = new THREE.Sphere(center, ROOM_RADIUS);
@@ -85,6 +83,7 @@ export default function HiveRoomsScene({
         }
       }
     });
+
 
     setVisibleIndices((prev) => {
       if (prev.size === nextVisible.size) {
