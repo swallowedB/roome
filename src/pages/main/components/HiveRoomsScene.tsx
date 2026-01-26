@@ -15,8 +15,7 @@ interface HiveRoomsSceneProps {
   onModelLoaded: (roomId: string) => void;
 }
 
-const SCREEN_INNER_MARGIN = 1.0;
-const SCREEN_OUTER_MARGIN = 1.2;
+const PREFETCH_MARGIN_WORLD = 3;
 
 export default function HiveRoomsScene({
   positionedRooms,
@@ -32,8 +31,15 @@ export default function HiveRoomsScene({
   const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set());
   const [prefetchPaths, setPrefetchPaths] = useState<string[]>([]);
 
-  const initializedRef = useRef(false);
-  const [initialized, setInitialized] = useState(false);
+  const screenToWorld = (x: number, y: number) => {
+    const vec = new THREE.Vector3(
+      (x / window.innerWidth) * 2 - 1,
+      -(y / window.innerHeight) * 2 + 1,
+      0.5,
+    );
+    vec.unproject(camera);
+    return vec;
+  };
 
   useEffect(() => {
     if (!positionedRooms.length) return;
@@ -45,63 +51,46 @@ export default function HiveRoomsScene({
     if (!index) return;
     if (!positionedRooms.length) return;
 
+    const TL = screenToWorld(0, 0);
+    const TR = screenToWorld(window.innerWidth, 0);
+    const BL = screenToWorld(0, window.innerHeight);
+    const BR = screenToWorld(window.innerWidth, window.innerHeight);
+
+    const minX = Math.min(TL.x, TR.x, BL.x, BR.x);
+    const maxX = Math.max(TL.x, TR.x, BL.x, BR.x);
+    const minZ = Math.min(TL.z, TR.z, BL.z, BR.z);
+    const maxZ = Math.max(TL.z, TR.z, BL.z, BR.z);
+
     const items = index.getAll();
+
     const nextVisible = new Set<number>();
     const nextPrefetch = new Set<string>();
 
-    let nearest: { idx: number; dist2: number } | null = null;
-
-    for (const item of items) {
-      const { index: idx, modelPath } = item;
+    items.forEach(({ index: idx, modelPath }) => {
       const positioned = positionedRooms[idx];
-      if (!positioned) continue;
+      if (!positioned) return;
 
       const { room, position } = positioned;
-      const [x, y, z] = position;
-
-      // 월드 좌표 → NDC(-1~1) 변환
-      const vec = new THREE.Vector3(x, y, z);
-      vec.project(camera); 
-
-      const ndcX = vec.x;
-      const ndcY = vec.y;
-      const ndcZ = vec.z;
-
-      const dist2 = ndcX * ndcX + ndcY * ndcY;
-      if (!nearest || dist2 < nearest.dist2) {
-        nearest = { idx, dist2 };
-      }
+      const x = position[0];
+      const z = position[2];
 
       const inView =
-        ndcZ >= -1 &&
-        ndcZ <= 1 &&
-        Math.abs(ndcX) <= SCREEN_INNER_MARGIN &&
-        Math.abs(ndcY) <= SCREEN_INNER_MARGIN;
+        x >= minX && x <= maxX &&
+        z >= minZ && z <= maxZ;
 
-      const inPrefetch =
-        ndcZ >= -1.2 &&
-        ndcZ <= 1.2 &&
-        Math.abs(ndcX) <= SCREEN_OUTER_MARGIN &&
-        Math.abs(ndcY) <= SCREEN_OUTER_MARGIN;
+      const inMargin =
+        x >= minX - PREFETCH_MARGIN_WORLD &&
+        x <= maxX + PREFETCH_MARGIN_WORLD &&
+        z >= minZ - PREFETCH_MARGIN_WORLD &&
+        z <= maxZ + PREFETCH_MARGIN_WORLD;
 
       if (inView) {
         nextVisible.add(idx);
-      } else if (inPrefetch) {
+      } else if (inMargin) {
         const path = room.modelPath ?? modelPath;
-        if (path) {
-          nextPrefetch.add(path);
-        }
+        if (path) nextPrefetch.add(path);
       }
-    }
-
-    if (nextVisible.size === 0 && nearest) {
-      nextVisible.add(nearest.idx);
-    }
-
-    if (!initializedRef.current && nextVisible.size > 0) {
-      initializedRef.current = true;
-      setInitialized(true);
-    }
+    });
 
     setVisibleIndices((prev) => {
       if (prev.size === nextVisible.size) {
@@ -129,10 +118,7 @@ export default function HiveRoomsScene({
   return (
     <>
       {positionedRooms
-        .filter(({ index }) => {
-          if (!initialized) return true;
-          return visibleIndices.has(index);
-        })
+        .filter(({ index }) => visibleIndices.has(index))
         .map(({ room, position, index }) => (
           <group
             key={room.roomId}
