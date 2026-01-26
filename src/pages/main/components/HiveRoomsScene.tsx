@@ -1,6 +1,7 @@
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef, useState } from 'react';
+import * as THREE from 'three';
 
 import { HiveSpatialIndex } from '@pages/main/engine/HiveSpatialIndex';
 import HiveRoomModel from './HiveRoomModel';
@@ -14,9 +15,10 @@ interface HiveRoomsSceneProps {
   onModelLoaded: (roomId: string) => void;
 }
 
-const VISIBLE_HALF_WIDTH = 18; // 렌더링 반경
-const PREFETCH_RADIUS_INNER = 18; // 프리패치 시작
-const PREFETCH_RADIUS_OUTER = 24; // 프리패치 끝
+const ROOM_RADIUS = 2.5;
+const PREFETCH_MARGIN = 5;
+
+const BROAD_RADIUS = 40;
 
 export default function HiveRoomsScene({
   positionedRooms,
@@ -43,15 +45,46 @@ export default function HiveRoomsScene({
     if (!positionedRooms.length) return;
 
     const camX = camera.position.x;
+    const camZ = camera.position.z;
 
-    const visible = index.getVisibleByX(camX, VISIBLE_HALF_WIDTH);
-    const prefetch = index.getPrefetchTargetsByX(
-      camX,
-      PREFETCH_RADIUS_INNER,
-      PREFETCH_RADIUS_OUTER,
+    const candidates = index.getCandidatesInRadius(camX, camZ, BROAD_RADIUS);
+
+    camera.updateMatrix();
+    camera.updateMatrixWorld();
+
+    const projScreenMatrix = new THREE.Matrix4();
+    projScreenMatrix.multiplyMatrices(
+      camera.projectionMatrix,
+      camera.matrixWorldInverse,
     );
+    const frustum = new THREE.Frustum();
+    frustum.setFromProjectionMatrix(projScreenMatrix);
 
-    const nextVisible = new Set(visible.map((v) => v.index));
+    const nextVisible = new Set<number>();
+    const nextPrefetch = new Set<string>();
+
+    candidates.forEach(({ index: idx, modelPath }) => {
+      const { room, position } = positionedRooms[idx];
+      const center = new THREE.Vector3(position[0], position[1], position[2]);
+
+      const baseSphere = new THREE.Sphere(center, ROOM_RADIUS);
+      const marginSphere = new THREE.Sphere(
+        center,
+        ROOM_RADIUS + PREFETCH_MARGIN,
+      );
+
+      const inBase = frustum.intersectsSphere(baseSphere);
+      const inMargin = frustum.intersectsSphere(marginSphere);
+
+      if (inBase) {
+        nextVisible.add(idx);
+      } else if (inMargin) {
+        const path = room.modelPath ?? modelPath;
+        if (path) {
+          nextPrefetch.add(path);
+        }
+      }
+    });
 
     setVisibleIndices((prev) => {
       if (prev.size === nextVisible.size) {
@@ -64,7 +97,7 @@ export default function HiveRoomsScene({
       return nextVisible;
     });
 
-    setPrefetchPaths(prefetch.map((v) => v.modelPath));
+    setPrefetchPaths(Array.from(nextPrefetch));
   });
 
   useEffect(() => {
