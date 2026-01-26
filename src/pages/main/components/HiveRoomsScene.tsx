@@ -31,6 +31,8 @@ export default function HiveRoomsScene({
   const indexRef = useRef<HiveSpatialIndex | null>(null);
   const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set());
   const [prefetchPaths, setPrefetchPaths] = useState<string[]>([]);
+  const initializedRef = useRef(false);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     if (!positionedRooms.length) return;
@@ -56,6 +58,7 @@ export default function HiveRoomsScene({
     frustum.setFromProjectionMatrix(projScreenMatrix);
 
     const nextVisible = new Set<number>();
+    const marginIndices = new Set<number>();
     const nextPrefetch = new Set<string>();
 
     items.forEach(({ index: idx, modelPath }) => {
@@ -77,6 +80,7 @@ export default function HiveRoomsScene({
       if (inBase) {
         nextVisible.add(idx);
       } else if (inMargin) {
+        marginIndices.add(idx);
         const path = room.modelPath ?? modelPath;
         if (path) {
           nextPrefetch.add(path);
@@ -84,6 +88,14 @@ export default function HiveRoomsScene({
       }
     });
 
+    if (nextVisible.size === 0 && marginIndices.size > 0) {
+      marginIndices.forEach((idx) => nextVisible.add(idx));
+    }
+
+    if (!initializedRef.current && nextVisible.size > 0) {
+      initializedRef.current = true;
+      setInitialized(true);
+    }
 
     setVisibleIndices((prev) => {
       if (prev.size === nextVisible.size) {
@@ -112,7 +124,7 @@ export default function HiveRoomsScene({
     <>
       {positionedRooms
         .filter(({ index }) => {
-          if (visibleIndices.size === 0) return true;
+          if (!initialized) return true;
           return visibleIndices.has(index);
         })
         .map(({ room, position, index }) => (
