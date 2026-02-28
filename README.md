@@ -16,9 +16,6 @@
 
 <br />
 
-
-<br />
-
 ## 📍 기여 포인트
 ### 1. 3D 및 인터랙션 구현
 - React-Three-Fiber와 Three.js로 3D 공간 및 오브젝트 구현
@@ -54,7 +51,7 @@
 ### 2. CD Rack 리팩토링
 | 비교 | Before | After |
 |---|---|---|
-| 화면 | <img width="1677" height="865" alt="Image" src="https://github.com/user-attachments/assets/d189b91c-209b-4283-9d9f-df6662abb6a8" /> | <img width="1677" height="865" alt="After Screenshot" src="https://github.com/user-attachments/assets/88ca0147-6447-4cf1-b3ad-e99b275d2e07" /> |
+| 화면 | <img width="350px" alt="Image" src="https://github.com/user-attachments/assets/d189b91c-209b-4283-9d9f-df6662abb6a8" /> | <img width="350px" alt="After Screenshot" src="https://github.com/user-attachments/assets/88ca0147-6447-4cf1-b3ad-e99b275d2e07" /> |
 | UI 구조 | Swiper 기반 2D 슬라이더 | 3D CD Rack 구조로 전환 |
 | 탐색 방식 | 좌우 전환 중심의 단순 탐색 | 스크롤/휠 기반의 회전·이동 인터랙션 |
 | 데이터 처리 | 비효율적인 요청 로직으로 불필요한 렌더링 및 API 호출 발생 | 중복 API 호출 제거 및 로딩/에러 상태 관리 개선 |
@@ -67,7 +64,7 @@
 ### 3. CD 리팩토링
 | 비교 | Before | After |
 |---|---|---|
-| 화면 | <img  alt="Image" src="https://github.com/user-attachments/assets/fa924710-63f6-4812-84f5-3d9673e00086" /> | <img alt="Image" src="https://github.com/user-attachments/assets/859b4bc5-c7d4-4740-b2d3-2e3d3ad713f6" /> |
+| 화면 | <img width="350px"  alt="Image" src="https://github.com/user-attachments/assets/fa924710-63f6-4812-84f5-3d9673e00086" /> | <img width="350px" alt="Image" src="https://github.com/user-attachments/assets/859b4bc5-c7d4-4740-b2d3-2e3d3ad713f6" /> |
 | 레이아웃 | 고정된 레이아웃 구조 | 드래그 가능한 창 UI 도입 |
 | 사용 방식 | 창 이동 및 위치 조정 불가 | 사용자가 직접 CD 플레이어 창 이동 가능 |
 | 반응형 대응 | 모바일/태블릿 확장에 불리한 구조 | PC에서는 자유 이동형 창, 모바일에서는 하단 시트 형태 적용 |
@@ -84,36 +81,36 @@
     <td align="center" valign="top" width="50%">
       <b>진입</b><br/>
       가이드 애니메이션<br/><br/>
-      <img width="450px" src="https://github.com/user-attachments/assets/70b4436e-bc6d-4bfa-b81d-d7e7cc16421d" alt="가이드 애니메이션" />
+      <img width="350px" src="https://github.com/user-attachments/assets/70b4436e-bc6d-4bfa-b81d-d7e7cc16421d" alt="가이드 애니메이션" />
     </td>
     <td align="center" valign="top" width="50%">
       <b>메인</b><br/>
       프리뷰<br/><br/>
-      <img width="450px" src="https://github.com/user-attachments/assets/f4009945-0cf8-450b-8336-3faa19ae8400" alt="프리뷰" />
+      <img width="350px" src="https://github.com/user-attachments/assets/f4009945-0cf8-450b-8336-3faa19ae8400" alt="프리뷰" />
     </td>
   </tr>
   <tr>
     <td align="center" valign="top">
       <b>방</b><br/>
       테마 설정<br/><br/>
-      <img src="https://github.com/user-attachments/assets/ab894069-3690-46a7-96ef-ad98218cc0c6" alt="테마 설정" />
+      <img width="350px" src="https://github.com/user-attachments/assets/ab894069-3690-46a7-96ef-ad98218cc0c6" alt="테마 설정" />
     </td>
     <td align="center" valign="top">
       <b>방</b><br/>
       가구 설정<br/><br/>
-      <img src="https://github.com/user-attachments/assets/675d2837-5c45-4edf-a78d-ca1df0746b7b" alt="가구 설정" />
+      <img width="350px" src="https://github.com/user-attachments/assets/675d2837-5c45-4edf-a78d-ca1df0746b7b" alt="가구 설정" />
     </td>
   </tr>
   <tr>
     <td align="center" valign="top">
       <b>방</b><br/>
       포인트<br/><br/>
-      <img src="https://github.com/user-attachments/assets/5aefefe3-2761-42ed-8c94-623461ed45d0" alt="포인트" />
+      <img width="350px" src="https://github.com/user-attachments/assets/5aefefe3-2761-42ed-8c94-623461ed45d0" alt="포인트" />
     </td>
     <td align="center" valign="top">
       <b>방</b><br/>
       방명록<br/><br/>
-      <img src="https://github.com/user-attachments/assets/01b767ca-ed58-4865-9efc-99b007eb8a0a" alt="방명록" />
+      <img width="350px" src="https://github.com/user-attachments/assets/01b767ca-ed58-4865-9efc-99b007eb8a0a" alt="방명록" />
     </td>
   </tr>
   <tr>
@@ -124,36 +121,36 @@
     <td align="center" valign="top">
       <b>도서</b><br/>
       책장<br/><br/>
-      <img width="450px" src="https://github.com/user-attachments/assets/0b9ee98c-9df9-49c4-af65-5a7c44fda441" alt="책장" />
+      <img width="350px" src="https://github.com/user-attachments/assets/0b9ee98c-9df9-49c4-af65-5a7c44fda441" alt="책장" />
     </td>
     <td align="center" valign="top">
       <b>도서</b><br/>
       서평 작성<br/><br/>
-      <img width="450px" src="https://github.com/user-attachments/assets/e8e8dad5-475a-44d5-8be1-dbad5177c0c5" alt="서평 작성" />
+      <img width="350px" src="https://github.com/user-attachments/assets/e8e8dad5-475a-44d5-8be1-dbad5177c0c5" alt="서평 작성" />
     </td>
   </tr>
   <tr>
     <td align="center" valign="top">
       <b>음악</b><br/>
       CD Rack<br/><br/>
-      <img width="450px" src="https://github.com/user-attachments/assets/ba7ef312-8e7e-4182-8ae4-7fe731f27943" alt="CD Rack" />
+      <img width="350px" src="https://github.com/user-attachments/assets/ba7ef312-8e7e-4182-8ae4-7fe731f27943" alt="CD Rack" />
     </td>
     <td align="center" valign="top">
       <b>음악</b><br/>
       플레이<br/><br/>
-      <img width="450px" src="https://github.com/user-attachments/assets/7466297e-d82c-4b44-b643-664b793dacc1" alt="음악 추가" />
+      <img width="350px" src="https://github.com/user-attachments/assets/7466297e-d82c-4b44-b643-664b793dacc1" alt="음악 추가" />
     </td>
   </tr>
   <tr>
     <td align="center" valign="top">
       <b>소셜</b><br/>
       알림<br/><br/>
-      <img width="450px" src="https://github.com/user-attachments/assets/f5b0a7b8-9e64-460c-97f9-6ef619171fa7" alt="친구목록 및 알림 확인" />
+      <img width="350px" src="https://github.com/user-attachments/assets/f5b0a7b8-9e64-460c-97f9-6ef619171fa7" alt="친구목록 및 알림 확인" />
     </td>
     <td align="center" valign="top">
       <b>소셜</b><br/>
       친구 목록<br/><br/>
-      <img width="450px" src="https://github.com/user-attachments/assets/6b7207ba-c819-4509-bfc9-a6f05e3a0ff9" alt="친구목록 및 알림 확인" />
+      <img width="350px" src="https://github.com/user-attachments/assets/6b7207ba-c819-4509-bfc9-a6f05e3a0ff9" alt="친구목록 및 알림 확인" />
     </td>
   </tr>
 </table>
