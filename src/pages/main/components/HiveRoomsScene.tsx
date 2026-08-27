@@ -1,9 +1,17 @@
 import { useGLTF } from '@react-three/drei';
 import { useFrame, useThree } from '@react-three/fiber';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import * as THREE from 'three';
 
-import { HiveSpatialIndex } from '@pages/main/engine/HiveSpatialIndex';
+import {
+  haveSameMembers,
+  HiveSpatialIndex,
+} from '@pages/main/engine/HiveSpatialIndex';
+import {
+  HIVE_ROOM_DEPTH_STEP,
+  HIVE_ROOM_VERTICAL_STEP,
+  HIVE_ROOM_WIDTH,
+} from '../constants/hiveGrid';
 import HiveRoomModel from './HiveRoomModel';
 
 interface HiveRoomsSceneProps {
@@ -13,9 +21,20 @@ interface HiveRoomsSceneProps {
   onPointerOver: (index: number) => void;
   onPointerOut: () => void;
   onModelLoaded: (roomId: string) => void;
+  initialVisibleRoomIds: string[];
+  onInitialVisibleRoomIds: (roomIds: string[]) => void;
 }
 
 const PREFETCH_MARGIN_WORLD = 3;
+const ROOM_GRID_PLANE = new THREE.Plane().setFromCoplanarPoints(
+  new THREE.Vector3(0, 0, 0),
+  new THREE.Vector3(HIVE_ROOM_WIDTH, 0, 0),
+  new THREE.Vector3(
+    HIVE_ROOM_WIDTH / 2,
+    -HIVE_ROOM_VERTICAL_STEP,
+    HIVE_ROOM_DEPTH_STEP,
+  ),
+);
 
 export default function HiveRoomsScene({
   positionedRooms,
@@ -24,44 +43,83 @@ export default function HiveRoomsScene({
   onPointerOver,
   onPointerOut,
   onModelLoaded,
+  initialVisibleRoomIds,
+  onInitialVisibleRoomIds,
 }: HiveRoomsSceneProps) {
-  const { camera } = useThree();
+  const { camera, size } = useThree();
 
   const indexRef = useRef<HiveSpatialIndex | null>(null);
+  const visibleIndicesRef = useRef<Set<number>>(new Set());
+  const prefetchedPathsRef = useRef<Set<string>>(new Set());
+  const lastCameraMatrixRef = useRef(new THREE.Matrix4());
+  const lastCanvasSizeRef = useRef({ width: 0, height: 0 });
+  const reportedInitialVisibleRef = useRef(false);
+  const frustumRef = useRef(new THREE.Frustum());
+  const projectionMatrixRef = useRef(new THREE.Matrix4());
+  const roomPositionRef = useRef(new THREE.Vector3());
   const [visibleIndices, setVisibleIndices] = useState<Set<number>>(new Set());
-  const [prefetchPaths, setPrefetchPaths] = useState<string[]>([]);
+  const raycaster = useMemo(() => new THREE.Raycaster(), []);
+  const initialVisibleRoomIdSet = useMemo(
+    () => new Set(initialVisibleRoomIds),
+    [initialVisibleRoomIds],
+  );
 
   const screenToWorld = (x: number, y: number) => {
-    const vec = new THREE.Vector3(
-      (x / window.innerWidth) * 2 - 1,
-      -(y / window.innerHeight) * 2 + 1,
-      0.5,
+    raycaster.setFromCamera(
+      new THREE.Vector2((x / size.width) * 2 - 1, -(y / size.height) * 2 + 1),
+      camera,
     );
-    vec.unproject(camera);
-    return vec;
+    return raycaster.ray.intersectPlane(ROOM_GRID_PLANE, new THREE.Vector3());
   };
 
   useEffect(() => {
-    if (!positionedRooms.length) return;
-    indexRef.current = new HiveSpatialIndex(positionedRooms);
+    indexRef.current = positionedRooms.length
+      ? new HiveSpatialIndex(positionedRooms)
+      : null;
+    visibleIndicesRef.current = new Set();
+    prefetchedPathsRef.current = new Set();
+    lastCameraMatrixRef.current.identity();
+    lastCanvasSizeRef.current = { width: 0, height: 0 };
+    reportedInitialVisibleRef.current = false;
+    setVisibleIndices(new Set());
   }, [positionedRooms]);
 
   useFrame(() => {
     const index = indexRef.current;
-    if (!index) return;
-    if (!positionedRooms.length) return;
+    if (!index || !size.width || !size.height) return;
+
+    camera.updateMatrixWorld();
+    const isSameCamera = lastCameraMatrixRef.current.equals(camera.matrixWorld);
+    const isSameCanvasSize =
+      lastCanvasSizeRef.current.width === size.width &&
+      lastCanvasSizeRef.current.height === size.height;
+    if (isSameCamera && isSameCanvasSize) return;
+
+    lastCameraMatrixRef.current.copy(camera.matrixWorld);
+    lastCanvasSizeRef.current = { width: size.width, height: size.height };
+    projectionMatrixRef.current.multiplyMatrices(
+      camera.projectionMatrix,
+      camera.matrixWorldInverse,
+    );
+    frustumRef.current.setFromProjectionMatrix(projectionMatrixRef.current);
 
     const TL = screenToWorld(0, 0);
-    const TR = screenToWorld(window.innerWidth, 0);
-    const BL = screenToWorld(0, window.innerHeight);
-    const BR = screenToWorld(window.innerWidth, window.innerHeight);
+    const TR = screenToWorld(size.width, 0);
+    const BL = screenToWorld(0, size.height);
+    const BR = screenToWorld(size.width, size.height);
+    if (!TL || !TR || !BL || !BR) return;
 
     const minX = Math.min(TL.x, TR.x, BL.x, BR.x);
     const maxX = Math.max(TL.x, TR.x, BL.x, BR.x);
     const minZ = Math.min(TL.z, TR.z, BL.z, BR.z);
     const maxZ = Math.max(TL.z, TR.z, BL.z, BR.z);
 
-    const items = index.getAll();
+    const items = index.queryRange(
+      minX - PREFETCH_MARGIN_WORLD,
+      maxX + PREFETCH_MARGIN_WORLD,
+      minZ - PREFETCH_MARGIN_WORLD,
+      maxZ + PREFETCH_MARGIN_WORLD,
+    );
 
     const nextVisible = new Set<number>();
     const nextPrefetch = new Set<string>();
@@ -74,7 +132,9 @@ export default function HiveRoomsScene({
       const x = position[0];
       const z = position[2];
 
-      const inView = x >= minX && x <= maxX && z >= minZ && z <= maxZ;
+      const inView = frustumRef.current.containsPoint(
+        roomPositionRef.current.set(position[0], position[1], position[2]),
+      );
 
       const inMargin =
         x >= minX - PREFETCH_MARGIN_WORLD &&
@@ -90,39 +150,35 @@ export default function HiveRoomsScene({
       }
     });
 
-    setVisibleIndices((prev) => {
-      if (nextVisible.size === 0) {
-        return prev;
-      }
+    if (!haveSameMembers(visibleIndicesRef.current, nextVisible)) {
+      visibleIndicesRef.current = nextVisible;
+      setVisibleIndices(nextVisible);
+    }
 
-      if (prev.size === nextVisible.size) {
-        let same = true;
-        prev.forEach((v) => {
-          if (!nextVisible.has(v)) same = false;
-        });
-        if (same) return prev;
-      }
-      return nextVisible;
-    });
+    if (!reportedInitialVisibleRef.current) {
+      reportedInitialVisibleRef.current = true;
+      onInitialVisibleRoomIds(
+        Array.from(nextVisible)
+          .map((roomIndex) => positionedRooms[roomIndex]?.room.roomId)
+          .filter((roomId): roomId is string => Boolean(roomId)),
+      );
+    }
 
-    setPrefetchPaths(Array.from(nextPrefetch));
-  });
-
-  useEffect(() => {
-    const uniquePaths = Array.from(new Set(prefetchPaths));
-    uniquePaths.forEach((path) => {
-      if (path) {
+    nextPrefetch.forEach((path) => {
+      if (!prefetchedPathsRef.current.has(path)) {
+        prefetchedPathsRef.current.add(path);
         useGLTF.preload(path);
       }
     });
-  }, [prefetchPaths]);
+  });
 
   return (
     <>
       {positionedRooms
-        .filter(({ index }) => {
-          if (visibleIndices.size === 0) return true;
-          return visibleIndices.has(index);
+        .filter(({ room, index }) => {
+          return (
+            visibleIndices.has(index) || initialVisibleRoomIdSet.has(room.roomId)
+          );
         })
         .map(({ room, position, index }) => (
           <group

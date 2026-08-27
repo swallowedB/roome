@@ -1,8 +1,14 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-export default function useHiveLoading(totalRooms: number, onLoadingComplete?: () => void) {
+export default function useHiveLoading(
+  initialRoomIds: string[],
+  hasInitialVisibleBatch: boolean,
+  onLoadingComplete?: () => void,
+) {
   const [loadedRooms, setLoadedRooms] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const completedInitialBatchRef = useRef(false);
+  const initialRoomIdsKey = initialRoomIds.join(',');
 
   const handleModelLoaded = useCallback((roomId: string) => {
     setLoadedRooms((prev) => {
@@ -14,11 +20,21 @@ export default function useHiveLoading(totalRooms: number, onLoadingComplete?: (
   }, []);
 
   useEffect(() => {
-    if (totalRooms > 0 && loadedRooms.size >= totalRooms) {
+    setIsLoading(true);
+    completedInitialBatchRef.current = false;
+  }, [hasInitialVisibleBatch, initialRoomIdsKey]);
+
+  useEffect(() => {
+    const isInitialBatchLoaded =
+      hasInitialVisibleBatch &&
+      initialRoomIds.every((roomId) => loadedRooms.has(roomId));
+
+    if (isInitialBatchLoaded && !completedInitialBatchRef.current) {
+      completedInitialBatchRef.current = true;
       setIsLoading(false);
       onLoadingComplete?.();
     }
-  }, [loadedRooms, totalRooms, onLoadingComplete]);
+  }, [hasInitialVisibleBatch, initialRoomIds, loadedRooms, onLoadingComplete]);
 
   return { isLoading, handleModelLoaded };
 }
