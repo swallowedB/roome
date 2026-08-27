@@ -16,7 +16,33 @@ function mapThemeKeyToFullThemeKey(
     'FULL_BASIC') as keyof typeof FullThemeData;
 }
 
-export default function useRooms(limit = 30, myUserId: number) {
+async function fetchAllHousemates() {
+  const all: Housemate[] = [];
+  let cursor: number | null = 0;
+
+  const LIMIT = 30;
+  const MAX_TOTAL = 500;
+
+  while (true) {
+    const res = await housemateAPI.getFollowing(cursor, LIMIT);
+
+    const mates = res?.housemates ?? [];
+    all.push(...mates);
+
+    if (all.length >= MAX_TOTAL) {
+      console.warn(`Housemates cap reached: ${MAX_TOTAL}`);
+      break;
+    }
+
+    if (!res.hasNext || !res.nextCursor) break;
+
+    cursor = res.nextCursor;
+  }
+
+  return all;
+}
+
+export default function useRooms(myUserId: number) {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
@@ -34,18 +60,15 @@ export default function useRooms(limit = 30, myUserId: number) {
           console.warn('myUserId가 유효하지 않음:', myUserId);
         }
 
-        const houseMateUsers = await housemateAPI.getFollowing(0, limit);
+        const housemates = await fetchAllHousemates();
 
         const roomData = await Promise.all(
-          houseMateUsers?.housemates?.map((mate: Housemate) =>
-            roomAPI.getRoomById(mate.userId),
-          ),
+          housemates.map((mate: Housemate) => roomAPI.getRoomById(mate.userId)),
         );
 
         const modelRooms = roomData.map((room) => {
           const themeKey = mapThemeKeyToFullThemeKey(room.theme);
           const theme = FullThemeData[themeKey] || FullThemeData.FULL_BASIC;
-          // // console.log('Room theme:', room.theme);
           return {
             ...room,
             modelPath: theme.modelPath,
@@ -62,7 +85,7 @@ export default function useRooms(limit = 30, myUserId: number) {
       }
     };
     fetchData();
-  }, [limit, myUserId]);
+  }, [myUserId]);
 
   return { rooms, loading, error };
 }
