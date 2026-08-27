@@ -3,6 +3,7 @@ import useHiveInteractions from '@pages/main/hooks/useHiveInteractions';
 import useHiveLoading from '@pages/main/hooks/useHiveLoading';
 import { OrbitControls } from '@react-three/drei';
 import { Canvas } from '@react-three/fiber';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import * as THREE from 'three';
 import Loading from '../../../components/Loading';
@@ -17,6 +18,28 @@ export default function HiveRooms({
   const { rooms } = useRooms(myUserId);
   const positionedRooms = useHexagonGrid(rooms, 0, 0);
   const navigate = useNavigate();
+  const [initialLoadRoomIds, setInitialLoadRoomIds] = useState<string[]>([]);
+  const [pinnedInitialRoomIds, setPinnedInitialRoomIds] = useState<string[]>(
+    [],
+  );
+  const [hasInitialVisibleBatch, setHasInitialVisibleBatch] = useState(false);
+  const roomIds = rooms.map(({ roomId }) => roomId).join(',');
+
+  useEffect(() => {
+    setInitialLoadRoomIds([]);
+    setPinnedInitialRoomIds([]);
+    setHasInitialVisibleBatch(false);
+  }, [roomIds]);
+
+  const handleInitialVisibleRoomIds = useCallback((roomIds: string[]) => {
+    setInitialLoadRoomIds((previous) =>
+      previous.length ? previous : roomIds,
+    );
+    setPinnedInitialRoomIds((previous) =>
+      previous.length ? previous : roomIds,
+    );
+    setHasInitialVisibleBatch(true);
+  }, []);
 
   const {
     hoveredIndex,
@@ -27,9 +50,16 @@ export default function HiveRooms({
   } = useHiveInteractions(rooms, navigate);
 
   const { isLoading, handleModelLoaded } = useHiveLoading(
-    rooms.length,
+    initialLoadRoomIds,
+    hasInitialVisibleBatch,
     onLoadingComplete,
   );
+
+  useEffect(() => {
+    if (!isLoading && pinnedInitialRoomIds.length) {
+      setPinnedInitialRoomIds([]);
+    }
+  }, [isLoading, pinnedInitialRoomIds.length]);
 
   return (
     <div className='w-full h-screen relative'>
@@ -52,6 +82,8 @@ export default function HiveRooms({
           onPointerOver={handlePointerOver}
           onPointerOut={handlePointerOut}
           onModelLoaded={handleModelLoaded}
+          initialVisibleRoomIds={pinnedInitialRoomIds}
+          onInitialVisibleRoomIds={handleInitialVisibleRoomIds}
         />
         <OrbitControls
           enableRotate={false}

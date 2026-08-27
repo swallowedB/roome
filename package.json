@@ -8,7 +8,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:hive-spatial-index": "tsc --outDir /private/tmp/roome-hive-spatial-index-test --rootDir src --module commonjs --moduleResolution node --target es2020 --esModuleInterop --skipLibCheck --types node --noEmitOnError false src/types/room.d.ts src/pages/main/engine/HiveSpatialIndex.ts src/pages/main/engine/HiveSpatialIndex.test.ts && node --test /private/tmp/roome-hive-spatial-index-test/pages/main/engine/HiveSpatialIndex.test.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",

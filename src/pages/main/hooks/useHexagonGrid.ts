@@ -1,4 +1,9 @@
 import { useMemo } from 'react';
+import {
+  HIVE_ROOM_DEPTH_STEP,
+  HIVE_ROOM_VERTICAL_STEP,
+  HIVE_ROOM_WIDTH,
+} from '../constants/hiveGrid';
 
 const directions: Position[] = [
   [-1, 0, 1], // 1. 왼쪽
@@ -131,17 +136,10 @@ export default function useHexagonGrid(
       }
     }
 
-    const roomScale = 0.5;
-    const roomWidth = 2.823 * roomScale;
-    const roomHeight = 1.75 * roomScale;
-
-    const width = roomWidth;
-    const height = roomHeight * 1.33;
-
     const finalRooms = result.map(({ position: [q, r], room }, idx) => {
-      const x = centerX + width * (q + r / 2);
-      const y = centerY - height * (2.98 / 4.2) * r;
-      const z = r * 0.7;
+      const x = centerX + HIVE_ROOM_WIDTH * (q + r / 2);
+      const y = centerY - HIVE_ROOM_VERTICAL_STEP * r;
+      const z = r * HIVE_ROOM_DEPTH_STEP;
       return { room, position: [x, y, z] as [number, number, number], index: idx };
     });
 
